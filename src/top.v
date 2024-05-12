@@ -2,7 +2,7 @@ module top #
 (
     parameter D_W = 8,
     parameter N = 2,
-    parameter WORD = 8
+    parameter WORD = 4
 )
 (
     input  wire clk,
@@ -11,8 +11,8 @@ module top #
     input  wire data_in_y,
     input  wire load_en,
     input  wire init,
-    output reg data_out_z,
-    output reg tx_ready
+    output reg  data_out_z,
+    output reg  tx_ready
 );
 //
 // REG & WIRES
@@ -23,8 +23,8 @@ wire  [2*D_W-1:0] data_core_z   [N-1:0][N-1:0];
 /*
     Input Control Module
 */
-control #(.D_W(D_W), .N(N), .WORD(WORD)) 
-        control_inst (
+input_control #(.D_W(D_W), .N(N), .WORD(WORD)) 
+        input_control_inst (
                         .clk(clk),
                         .rst(rst),
                         .data_in_x(data_in_x),

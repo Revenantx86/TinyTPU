@@ -1,8 +1,8 @@
-module control # 
+module input_control # 
 (
     parameter D_W = 8,
     parameter N = 2,
-    parameter WORD = 8
+    parameter WORD = 4
 )
 (
     input wire clk,
