@@ -5,28 +5,35 @@ module output_control #
 )
 (
     // Global Signal
-    input  wire            clk,
-    input  wire            rst,
+    input  wire                   clk,
+    input  wire                   rst,
     // Systolic Output
-    input  wire [2*D_W-1:0] core_out_z [N-1:0][N-1:0],
-    input  wire             init, 
+    input  wire [(N*N*2*D_W)-1:0] core_out_z,
+    input  wire                   init, 
     // IO Output
-    output reg             data_out_z,
-    output reg             tx_ready
+    output reg                    data_out_z,
+    output reg                    tx_ready
 );
 /*
     STATE Machine
 */
-enum {IDLE,TX} STATE;
+//
+localparam IDLE = 1'b0;
+localparam TX   = 1'b1;
+reg        STATE;
+//enum {IDLE,TX} STATE;
+//
 // Counters
 reg [$clog2(2*D_W)-1:0] bit_counter;
 reg [$clog2(N)-1:0]     column_counter;
 reg [$clog2(N)-1:0]     row_counter;
 
 wire [2*D_W-1:0]        data_tx_reg;
-assign data_tx_reg = core_out_z[row_counter][column_counter];
-
-reg init_delay [N:0];
+//
+//
+assign data_tx_reg = core_out_z[(row_counter*N + column_counter)*2*D_W +: 2*D_W];
+//
+reg init_delay [N-1:0];
 //
 always @(posedge clk) begin
     if(rst) begin
@@ -36,7 +43,7 @@ always @(posedge clk) begin
         init_delay[0] <= init;
         case(STATE) 
             IDLE: begin
-                if(init_delay[N])
+                if(init_delay[N-1])
                     STATE <= TX;
             end
             TX: begin
@@ -63,24 +70,25 @@ always @(posedge clk) begin
         case(STATE) 
             IDLE: begin
                 //
-                bit_counter <= 0;
-                column_counter <= 0;
-                row_counter <= 0;
-                tx_ready <= 0;
-                data_out_z <= 0;
+                bit_counter     <= 0;
+                column_counter  <= 0;
+                row_counter     <= 0;
+                tx_ready        <= 0;
+                data_out_z      <= 0;
                 //        
             end
             TX: begin
                 //
-                tx_ready <= 1;
+                tx_ready    <= 1;
                 bit_counter <= bit_counter + 1;
-                data_out_z <=  data_tx_reg[bit_counter];
+                data_out_z  <=  data_tx_reg[bit_counter];
+                //
                 if(bit_counter == (2*D_W-1)) begin
                     column_counter <= column_counter + 1;
-                    bit_counter <= 0;
+                    bit_counter    <= 0;
                 end
                 if(column_counter == N-1 && bit_counter == (2*D_W-1))
-                    row_counter <= row_counter + 1;
+                    row_counter   <= row_counter + 1;
                 //
             end
         endcase
@@ -89,7 +97,7 @@ end
 
 // Assign delay counter
 genvar i;
-for (i=1;i<N+1;i=i+1) begin
+for (i=1;i<N;i=i+1) begin
     always @(posedge clk) begin
         init_delay[i] <= init_delay[i-1];
     end

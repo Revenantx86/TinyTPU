@@ -2,7 +2,7 @@ module input_control #
 (
     parameter D_W = 8,
     parameter N = 2,
-    parameter WORD = 4
+    parameter WORD = 8
 )
 (
     input wire clk,
@@ -11,15 +11,21 @@ module input_control #
     input wire data_in_y,
     input wire load_en,
     input wire init,
-    output reg [D_W-1:0] out_x [N-1:0],
-    output reg [D_W-1:0] out_y [N-1:0]
+    output reg [(N*D_W)-1:0] out_x_flat,
+    output reg [(N*D_W)-1:0] out_y_flat
 );
 //
 /*
     State Machine
 */
-enum {IDLE,LOAD,TRANSFER} STATE;
+//enum {IDLE,LOAD,TRANSFER} STATE;
+localparam IDLE     = 2'b00;
+localparam LOAD     = 2'b01;
+localparam TRANSFER = 2'b10;
+reg [1:0] STATE;
 //
+wire [D_W-1:0] out_x [N-1:0];
+wire [D_W-1:0] out_y [N-1:0];
 /*
     Generate Memory Block
 */
@@ -189,4 +195,14 @@ begin
     end
 end
 
+// Flatten output signal
+integer r;
+// Packing the 2D array 'z' into the flat wire 'data_core_z_flat'
+always @(*) begin
+    for (r = 0; r < N; r = r + 1) begin
+        // Compute the starting index of each signal in the flat wire
+        out_x_flat[(r+1)*D_W-1 -: D_W] = out_x[r];
+        out_y_flat[(r+1)*D_W-1 -: D_W] = out_y[r];
+    end
+end
 endmodule
