@@ -11,8 +11,8 @@ module top #
     input  wire data_in_y,
     input  wire load_en,
     input  wire init,
-    output reg  data_out_z,
-    output reg  tx_ready
+    output wire  data_out_z,
+    output wire  tx_ready
 );
 //
 // REG & WIRES

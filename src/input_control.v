@@ -41,7 +41,7 @@ reg  [D_W-1:0]          data_in_y_reg;
 //
 genvar n;
 generate 
-    for(n=0;n<N;n++) begin
+    for(n=0;n<N;n=n+1) begin
         //Initalize memory X & Y
         dff_mem #( .D_W(D_W), .WORD(WORD)) 
                 mem_x (
@@ -105,7 +105,7 @@ always @(posedge clk) begin
         data_in_x_reg <= 0;
         data_in_y_reg <= 0;
         //
-        for(i=0;i<N;i++) begin
+        for(i=0;i<N;i=i+1) begin
             // Reset X
             addr_x_ram[i]  <= 0;
             wr_en_x_ram[i] <= 0;
