@@ -12,7 +12,8 @@ module input_control #
     input wire load_en,
     input wire init,
     output reg [(N*D_W)-1:0] out_x_flat,
-    output reg [(N*D_W)-1:0] out_y_flat
+    output reg [(N*D_W)-1:0] out_y_flat,
+    output reg out_init
 );
 //
 /*
@@ -69,22 +70,28 @@ endgenerate
 always @(posedge clk) begin
     if(rst) begin
         STATE <= IDLE;
+        out_init <= 0; 
     end
     else begin
         case(STATE) 
         IDLE: begin
+            out_init <= 0; 
             if(load_en) 
                 STATE <= LOAD;
-            else if(init)
+            else if(init)begin
+                out_init <= 1; 
                 STATE <= TRANSFER;
+            end
         end
         LOAD: begin
             if(!load_en)
                 STATE <= IDLE;
         end
         TRANSFER: begin
-            if(rd_en_x_ram[N-1]) 
+            out_init <= 0; 
+            if(rd_en_x_ram[N-1]) begin
                 STATE <= IDLE;
+            end
         end
         endcase
     end
@@ -105,15 +112,15 @@ always @(posedge clk) begin
         data_in_x_reg <= 0;
         data_in_y_reg <= 0;
         //
+        wr_en_x_ram[0] <= 0;
+        rd_en_x_ram[0] <= 0;
+        wr_en_y_ram[0] <= 0;
+        rd_en_y_ram[0] <= 0;
         for(i=0;i<N;i=i+1) begin
             // Reset X
             addr_x_ram[i]  <= 0;
-            wr_en_x_ram[i] <= 0;
-            rd_en_x_ram[i] <= 0;
             // Reset Y
-            addr_y_ram[i]  <= 0;
-            wr_en_y_ram[i] <= 0;
-            rd_en_y_ram[i] <= 0;            
+            addr_y_ram[i]  <= 0;                
         end
         //
     end
@@ -123,10 +130,8 @@ always @(posedge clk) begin
                 addr_counter <= 0;
                 // X Row
                 wr_en_x_ram[N-1] <= 0;
-                rd_en_x_ram[N-1] <= 0;
                 // Y Column
                 wr_en_y_ram[N-1] <= 0;
-                rd_en_y_ram[N-1] <= 0;
             end
             LOAD: begin
                 //
@@ -184,14 +189,25 @@ for (x=1;x<N;x=x+1)
 begin
     always@(posedge clk)
     begin
-        if(STATE == TRANSFER) begin
+        if (rst) begin
+            addr_x_ram[x]  <= 0; 
+            rd_en_x_ram[x] <= 0;
+            // Assign for Y column 
+            addr_y_ram[x] <= 0;
+            rd_en_y_ram[x] <= 0;
+        end
+        else if(STATE == TRANSFER || STATE == IDLE) begin
             // Assign for X row
-            addr_x_ram[x] <= addr_x_ram[x-1]; 
-            rd_en_x_ram[x]   <= rd_en_x_ram[x-1];
-            // ASsign for Y column 
+            addr_x_ram[x]  <= addr_x_ram[x-1]; 
+            rd_en_x_ram[x] <= rd_en_x_ram[x-1];
+            // Assign for Y column 
             addr_y_ram[x] <= addr_y_ram[x-1];
             rd_en_y_ram[x] <= rd_en_y_ram[x-1];
         end
+        //else if (STATE == IDLE) begin
+        //    rd_en_x_ram[N-1] <= 0;
+        //    rd_en_y_ram[N-1] <= 0;
+        //end
     end
 end
 
