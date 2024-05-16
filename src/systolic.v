@@ -59,7 +59,7 @@ generate
         //
         // Assign initialization wire to first row
         if(i==0) begin
-            for(k=0; k<N-1;k++) begin
+            for(k=0; k<N-1;k=k+1) begin
                 assign init_in[0][k+1] = init_out[0][k];
             end 
         end
@@ -74,7 +74,7 @@ generate
             //
             // Asssign initalization signal to columns
             if(i==0) begin
-                for (k=0;k<N-1;k++) begin
+                for (k=0;k<N-1;k=k+1) begin
                     assign init_in[k+1][j]=init_out[k][j];
                 end
             end
